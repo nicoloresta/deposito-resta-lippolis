@@ -9,6 +9,11 @@ class Student:
             return False
         return self.name__ == other.name__ and self.surname__ == other.surname__
 
+    def __lt__(self, other) -> bool:
+        if not isinstance(other, Student):
+            return NotImplemented
+        return (self.surname__, self.name__) < (other.surname__, other.name__)
+
     def __repr__(self):
         return f"Name: {self.name__}, Surname: {self.surname__}"
 
@@ -38,5 +43,6 @@ class StudentManagers:
     def show_students(self) -> None:
         if self.current_db is None:
             raise ValueError("No current database set.")
-        for student in self.dbs[self.current_db]:
+        students = sorted(self.dbs[self.current_db])
+        for student in students:
             print(student)
