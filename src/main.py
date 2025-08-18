@@ -58,6 +58,9 @@ class StudentManagers:
             ------------
             Exception
                 If no current database is set.
+
+            TypeError:
+                If the name or surname is not a string.
             
             Examples:
             ------------
@@ -67,6 +70,10 @@ class StudentManagers:
         """
 
         self.check_current_db()
+        
+        if not isinstance(name, str) or not isinstance(surname, str):
+            raise TypeError("Name and surname must be strings.")
+        
         for student in self.dbs[self.current_db]:
             if (name.lower() in student.name__.lower() and
                 surname.lower() in student.surname__.lower()):
