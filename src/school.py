@@ -27,14 +27,7 @@ class StudentManagers:
         if db not in self.dbs:
             raise ValueError(f"Database {db} does not exist.")
         self.current_db = db
-
-    def check_current_db(self):
-        """
-            Checks if the current database is set.
-            Raises an exception if not set.
-        """
-        if self.current_db is None:
-            raise Exception("No current database set.")
+        
 
     # Methods to implement
     def find_student(self, name: str, surname: str) -> Student:
@@ -69,7 +62,8 @@ class StudentManagers:
             None if not found.
         """
 
-        self.check_current_db()
+        if self.current_db is None:
+            raise Exception("No current database set.")
         
         if not isinstance(name, str) or not isinstance(surname, str):
             raise TypeError("Name and surname must be strings.")
