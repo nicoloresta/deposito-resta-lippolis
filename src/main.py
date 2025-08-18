@@ -34,13 +34,14 @@ def main():
         elif choice == "find":
             name = input("Enter student's name to find: ")
             surname = input("Enter student's surname to find: ")
-
-            student = sm.find_student(name, surname)
-            if student:
-                print(f"Found student: {student}")
-            else:
-                print("Student not found.")
-
+            try:
+                student = sm.find_student(name, surname)
+                if student:
+                    print(f"Found student: {student}")
+                else:
+                    print("Student not found.")
+            except Exception as e:
+                print(e)
         else:
             print("Unknown command.")
 
