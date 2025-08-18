@@ -27,3 +27,49 @@ class StudentManagers:
         if db not in self.dbs:
             raise ValueError(f"Database {db} does not exist.")
         self.current_db = db
+
+    def check_current_db(self):
+        """
+            Checks if the current database is set.
+            Raises an exception if not set.
+        """
+        if self.current_db is None:
+            raise Exception("No current database set.")
+
+    # Methods to implement
+    def find_student(self, name: str, surname: str) -> Student:
+        """
+            Finds a student in a specific database
+            with partial and case-insensitive matching.
+
+            Parameters:
+            ------------
+            name: str 
+                The name of the student to find.
+            surname: str
+                The surname of the student to find.
+            
+            Returns:
+            ------------
+            Student or None
+                Returns the first matching student or None if not found.
+            
+            Raises:
+            ------------
+            Exception
+                If no current database is set.
+            
+            Examples:
+            ------------
+            >>> find_student("Fra", "Ros")
+            Name: Francesco, Surname: Rossi if found.
+            None if not found.
+        """
+
+        self.check_current_db()
+        for student in self.dbs[self.current_db]:
+            if (name.lower() in student.name__.lower() and
+                surname.lower() in student.surname__.lower()):
+                return student
+        return None
+
