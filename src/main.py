@@ -1,11 +1,11 @@
 from school import StudentManagers, Student
 
-if __name__ == "__main__":
+def main():
     choice = None
     sm = StudentManagers()
 
     while choice != "exit":
-        choice = input("Enter a command (add/show/change_db/create_db): ")
+        choice = input("Enter a command (add/show/find/change_db/create_db): ")
         if choice == "add":
             name = input("Enter student's name: ")
             surname = input("Enter student's surname: ")
@@ -31,5 +31,19 @@ if __name__ == "__main__":
                 sm.create_db(new_db)
             except ValueError as e:
                 print(e)
+        elif choice == "find":
+            name = input("Enter student's name to find: ")
+            surname = input("Enter student's surname to find: ")
+            try:
+                student = sm.find_student(name, surname)
+                if student:
+                    print(f"Found student: {student}")
+                else:
+                    print("Student not found.")
+            except Exception as e:
+                print(e)
         else:
             print("Unknown command.")
+
+if __name__ == "__main__":
+    main()
