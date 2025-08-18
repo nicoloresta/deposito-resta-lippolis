@@ -1,6 +1,6 @@
 from school import StudentManagers, Student
 
-if __name__ == "__main__":
+def main():
     choice = None
     sm = StudentManagers()
 
@@ -33,3 +33,6 @@ if __name__ == "__main__":
                 print(e)
         else:
             print("Unknown command.")
+
+if __name__ == "__main__":
+    main()
