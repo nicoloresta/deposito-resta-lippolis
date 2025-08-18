@@ -27,3 +27,10 @@ class StudentManagers:
         if db not in self.dbs:
             raise ValueError(f"Database {db} does not exist.")
         self.current_db = db
+    
+    def add_student(self, student: Student) -> None:
+        if self.current_db is None:
+            raise ValueError("No current database set.")
+        if student in self.dbs[self.current_db]:
+            raise ValueError(f"Student {student} already exists in database {self.current_db}.")
+        self.dbs[self.current_db].append(student)
