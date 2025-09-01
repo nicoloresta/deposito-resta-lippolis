@@ -49,6 +49,9 @@ class GuideCreatorState(BaseModel):
     ----------
     topic : str, default=""
         The current topic being processed by the flow.
+    
+    response : str, default=""
+        The crew's response to be summarized.
     """
 
     topic: str = ""
