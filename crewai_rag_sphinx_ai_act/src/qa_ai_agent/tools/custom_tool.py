@@ -30,37 +30,33 @@ Examples
 >>> result = tool._run("What is the battery capacity of the Galaxy S22?")
 """
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Type
 
+from crewai.tools import BaseTool
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from crewai.tools import BaseTool
-from langchain_community.document_loaders import (
-    CSVLoader, 
-    DirectoryLoader,
-    PyPDFLoader, 
-    TextLoader
-)
+from langchain_community.document_loaders import (CSVLoader, DirectoryLoader,
+                                                  PyPDFLoader, TextLoader)
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
+from langchain_openai import AzureOpenAIEmbeddings
 from pydantic import BaseModel, Field
 
-import os
-from langchain_openai import AzureOpenAIEmbeddings
-
 load_dotenv()
+
 
 @dataclass
 class RetrieverSettings:
     """
     Settings for configuring the retriever behavior.
-    
+
     This dataclass provides configuration options for the FAISS retriever,
     allowing customization of search strategy, result count, and diversity
     parameters.
-    
+
     Parameters
     ----------
     search_type : str, default="similarity"
@@ -73,27 +69,29 @@ class RetrieverSettings:
     mmr_lambda : float, default=0.5
         Trade-off between diversity and relevance when using ``search_type="mmr"``.
         Higher values favor relevance, lower values favor diversity.
-        
+
     Examples
     --------
     >>> settings = RetrieverSettings(search_type="mmr", k=5, mmr_lambda=0.7)
     >>> settings.search_type
     'mmr'
     """
-    search_type: str = "similarity" # "mmr" o "similarity"
+
+    search_type: str = "similarity"  # "mmr" o "similarity"
     k: int = 4
     fetch_k: int = 10
     mmr_lambda: float = 0.5
+
 
 @dataclass
 class ChunkingSettings:
     """
     Chunking configuration for splitting documents.
-    
+
     This dataclass defines how documents should be split into smaller chunks
     for processing. The chunking process is crucial for effective retrieval
     and embedding generation.
-    
+
     Parameters
     ----------
     chunk_size : int, default=1000
@@ -102,24 +100,28 @@ class ChunkingSettings:
     chunk_overlap : int, default=200
         Number of overlapping characters between adjacent chunks. Overlap
         helps maintain context continuity across chunk boundaries.
-        
+
     Examples
     --------
     >>> settings = ChunkingSettings(chunk_size=1500, chunk_overlap=300)
     >>> settings.chunk_size
     1500
     """
+
     chunk_size: int = 1000
     chunk_overlap: int = 200
 
-def load_docs(path: Path, file_types: List[str] = [".txt", ".md", ".pdf", ".csv"]) -> List[Document]:
+
+def load_docs(
+    path: Path, file_types: List[str] = [".txt", ".md", ".pdf", ".csv"]
+) -> List[Document]:
     """
     Load documents from a directory.
-    
+
     Supports ``.txt``, ``.md``, ``.pdf``, and ``.csv`` files using langchain
     loaders. Each file type is loaded with a suitable loader and aggregated
     into a single list of ``Document`` objects.
-    
+
     Parameters
     ----------
     path : pathlib.Path
@@ -127,17 +129,17 @@ def load_docs(path: Path, file_types: List[str] = [".txt", ".md", ".pdf", ".csv"
     file_types : list of str, optional
         File extensions to include. Defaults to ``[".txt", ".md", ".pdf", ".csv"]``.
         Unsupported file types are skipped with a warning message.
-    
+
     Returns
     -------
     list of langchain.schema.Document
         Loaded documents with metadata preserved from the original files.
-    
+
     Raises
     ------
     ValueError
         If ``path`` does not exist or is not accessible.
-        
+
     Examples
     --------
     >>> from pathlib import Path
@@ -155,24 +157,20 @@ def load_docs(path: Path, file_types: List[str] = [".txt", ".md", ".pdf", ".csv"
     # Load different file types
     for file_type in file_types:
         try:
-            if file_type == '.txt' or file_type == '.md':
+            if file_type == ".txt" or file_type == ".md":
                 loader = DirectoryLoader(
                     path,
                     glob=f"**/*{file_type}",
                     loader_cls=TextLoader,
-                    loader_kwargs={'encoding': 'utf-8'}
+                    loader_kwargs={"encoding": "utf-8"},
                 )
-            elif file_type == '.pdf':
+            elif file_type == ".pdf":
                 loader = DirectoryLoader(
-                    path,
-                    glob=f"**/*{file_type}",
-                    loader_cls=PyPDFLoader
+                    path, glob=f"**/*{file_type}", loader_cls=PyPDFLoader
                 )
-            elif file_type == '.csv':
+            elif file_type == ".csv":
                 loader = DirectoryLoader(
-                    path,
-                    glob=f"**/*{file_type}",
-                    loader_cls=CSVLoader
+                    path, glob=f"**/*{file_type}", loader_cls=CSVLoader
                 )
             else:
                 print(f"Unsupported file type: {file_type}")
@@ -187,18 +185,16 @@ def load_docs(path: Path, file_types: List[str] = [".txt", ".md", ".pdf", ".csv"
 
     return documents
 
-def chunk_docs(
-        docs: List[Document], 
-        settings: ChunkingSettings
-    ):
+
+def chunk_docs(docs: List[Document], settings: ChunkingSettings):
     """
     Split documents into smaller chunks.
-    
+
     Uses ``RecursiveCharacterTextSplitter`` with the provided settings to
     generate overlapping chunks suitable for embedding and retrieval.
     The splitter attempts to break on natural boundaries like paragraphs,
     sentences, and punctuation.
-    
+
     Parameters
     ----------
     docs : list of langchain.schema.Document
@@ -206,14 +202,14 @@ def chunk_docs(
         attribute containing the text to be chunked.
     settings : ChunkingSettings
         Chunking configuration specifying chunk size and overlap.
-    
+
     Returns
     -------
     list of langchain.schema.Document
         Chunked documents with preserved metadata. Each chunk maintains
         the original document's metadata while containing a subset of
         the content.
-        
+
     Examples
     --------
     >>> from .tools.custom_tool import ChunkingSettings
@@ -227,26 +223,25 @@ def chunk_docs(
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.chunk_size,
         chunk_overlap=settings.chunk_overlap,
-        separators=[
-            "\n\n", "\n", ". ", "? ", "! ", "; ", ": ", ", ", " ", "", "---"
-        ],
+        separators=["\n\n", "\n", ". ", "? ", "! ", "; ", ": ", ", ", " ", "", "---"],
     )
 
     return text_splitter.split_documents(docs)
 
+
 class RagToolInput(BaseModel):
     """
     Input schema for ``RagTool``.
-    
+
     This Pydantic model defines the expected input format for the RAG tool,
     ensuring that queries are properly validated before processing.
-    
+
     Parameters
     ----------
     query : str
         Query for retrieving the most relevant documents. Should be a
         natural language question or search term.
-        
+
     Examples
     --------
     >>> input_data = RagToolInput(query="What is the battery capacity?")
@@ -256,19 +251,20 @@ class RagToolInput(BaseModel):
 
     query: str = Field(..., description="Query for retrieving most relevant documents")
 
+
 class RagTool(BaseTool):
     """
     Retrieval-Augmented Generation (RAG) tool.
-    
+
     The tool retrieves relevant document chunks from a FAISS index and can be
     used within CrewAI workflows to augment generation with external context.
     It automatically handles document loading, chunking, and indexing if no
     existing index is found.
-    
+
     The tool supports both similarity search and Maximal Marginal Relevance (MMR)
     retrieval strategies, allowing for customization of result relevance vs.
     diversity trade-offs.
-    
+
     Attributes
     ----------
     name : str
@@ -279,7 +275,7 @@ class RagTool(BaseTool):
         Input validation schema (RagToolInput).
     _retriever : Any
         Private attribute storing the configured FAISS retriever.
-        
+
     Examples
     --------
     >>> tool = RagTool(
@@ -289,6 +285,7 @@ class RagTool(BaseTool):
     ... )
     >>> result = tool._run("What features does the device have?")
     """
+
     name: str = "Rag Tool"
     description: str = (
         "A tool for retrieving and generating information using RAG (Retrieval-Augmented Generation) techniques."
@@ -299,21 +296,21 @@ class RagTool(BaseTool):
     _retriever: Any = None
 
     def __init__(
-            self,
-            embedding_model: Any = None,
-            rag_path: Path = Path("./rsc/rag"),
-            docs_path: Path = Path("./rsc/docs"),
-            retriever_settings: RetrieverSettings = RetrieverSettings(),
-            chunk_settings: ChunkingSettings = ChunkingSettings()
-        ):
+        self,
+        embedding_model: Any = None,
+        rag_path: Path = Path("./rsc/rag"),
+        docs_path: Path = Path("./rsc/docs"),
+        retriever_settings: RetrieverSettings = RetrieverSettings(),
+        chunk_settings: ChunkingSettings = ChunkingSettings(),
+    ):
         """
         Initialize the RAG tool.
-        
+
         Builds or loads a FAISS vector store from ``rag_path``. If a previously
         saved index exists in ``rag_path``, it is loaded and a retriever is
         configured. Otherwise, documents are loaded, chunked, and a new vector
         store is created and saved.
-        
+
         Parameters
         ----------
         embedding_model : Any, optional
@@ -331,19 +328,19 @@ class RagTool(BaseTool):
         chunk_settings : ChunkingSettings, optional
             Chunking configuration for splitting documents before indexing.
             Defaults to ChunkingSettings().
-            
+
         Notes
         -----
         The tool automatically detects existing FAISS indices (``index.faiss``
         and ``index.pkl`` files) and loads them if available. Otherwise, it
         processes documents from ``docs_path`` to create a new index.
-        
+
         Environment variables required for Azure OpenAI embeddings:
         - EMBEDDING_MODEL: Model name
         - AZURE_API_BASE: API endpoint
         - AZURE_API_KEY: API key
         - AZURE_API_VERSION: API version
-        
+
         Examples
         --------
         >>> tool = RagTool(
@@ -353,30 +350,28 @@ class RagTool(BaseTool):
         """
         # Call parent constructor first
         super().__init__()
-        
+
         # Initialize embedding model if not provided
         if embedding_model is None:
             embedding_model = AzureOpenAIEmbeddings(
-                model=os.getenv('EMBEDDING_MODEL'),
-                azure_endpoint=os.getenv('AZURE_API_BASE'),
-                api_key=os.getenv('AZURE_API_KEY'),
-                openai_api_version=os.getenv('AZURE_API_VERSION')
+                model=os.getenv("EMBEDDING_MODEL"),
+                azure_endpoint=os.getenv("AZURE_API_BASE"),
+                api_key=os.getenv("AZURE_API_KEY"),
+                openai_api_version=os.getenv("AZURE_API_VERSION"),
             )
         # checks if in path there is already the rag
         if (rag_path / "index.faiss").exists() and (rag_path / "index.pkl").exists():
             print("RAG index already exists.")
             vector_store = FAISS.load_local(
-                rag_path,
-                embedding_model, 
-                allow_dangerous_deserialization=True
+                rag_path, embedding_model, allow_dangerous_deserialization=True
             )
             retriever = vector_store.as_retriever(
                 search_type=retriever_settings.search_type,
                 search_kwargs={
                     "k": retriever_settings.k,
                     "fetch_k": retriever_settings.fetch_k,
-                    "lambda_mult": retriever_settings.mmr_lambda
-                }
+                    "lambda_mult": retriever_settings.mmr_lambda,
+                },
             )
             # Store retriever as a private attribute
             self._retriever = retriever
@@ -384,8 +379,7 @@ class RagTool(BaseTool):
             docs = load_docs(docs_path)
             chunks = chunk_docs(docs, chunk_settings)
             vector_store = FAISS.from_documents(
-                documents=chunks,
-                embedding=embedding_model
+                documents=chunks, embedding=embedding_model
             )
             # save vector store into path
             vector_store.save_local(folder_path=rag_path)
@@ -394,8 +388,8 @@ class RagTool(BaseTool):
                 search_kwargs={
                     "k": retriever_settings.k,
                     "fetch_k": retriever_settings.fetch_k,
-                    "lambda_mult": retriever_settings.mmr_lambda
-                }
+                    "lambda_mult": retriever_settings.mmr_lambda,
+                },
             )
             # Store retriever as a private attribute
             self._retriever = retriever
@@ -403,24 +397,24 @@ class RagTool(BaseTool):
     def _run(self, query: str) -> str:
         """
         Run a retrieval query and return concatenated contents.
-        
+
         This method is called by CrewAI when the tool is invoked. It uses
         the configured FAISS retriever to find the most relevant document
         chunks for the given query and returns them in a formatted string.
-        
+
         Parameters
         ----------
         query : str
             Natural language query used to retrieve relevant chunks.
             Should be a clear, specific question or search term.
-    
+
         Returns
         -------
         str
             Concatenation of the retrieved documents' ``page_content``,
             separated by blank lines. Each chunk is prefixed with its
             source information for traceability.
-            
+
         Examples
         --------
         >>> tool = RagTool()
@@ -432,5 +426,8 @@ class RagTool(BaseTool):
         best_chunks = self._retriever.invoke(query)
         # Process the best_chunks to generate a response including the source
         return "\n\n".join(
-            [f"[Source: {doc.metadata.get('source', 'Unknown')}]\n{doc.page_content}" for doc in best_chunks]
+            [
+                f"[Source: {doc.metadata.get('source', 'Unknown')}]\n{doc.page_content}"
+                for doc in best_chunks
+            ]
         )
