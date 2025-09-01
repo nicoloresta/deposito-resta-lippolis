@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 QA AI Agent Documentation
-========================
+==========================
 
 Welcome to the QA AI Agent documentation. This system implements a comprehensive
 question-answering system that combines multiple AI agents working together to
