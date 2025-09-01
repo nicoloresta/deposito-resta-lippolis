@@ -2,7 +2,7 @@ Installation
 ============
 
 Requirements
------------
+------------
 
 * Python 3.8+
 * CrewAI
@@ -11,7 +11,7 @@ Requirements
 * Azure OpenAI API access
 
 Installation Steps
------------------
+------------------
 
 1. Clone the repository
 2. Install dependencies: ``pip install -r requirements.txt``
@@ -19,7 +19,7 @@ Installation Steps
 4. Configure YAML files
 
 Environment Variables
---------------------
+---------------------
 
 Set these environment variables for Azure OpenAI access:
 

@@ -2,7 +2,7 @@ Quick Start
 ===========
 
 Basic Usage
-----------
+-----------
 
 .. code-block:: python
 
@@ -12,7 +12,7 @@ Basic Usage
    kickoff()
 
 Example Flow
------------
+------------
 
 1. User inputs a topic
 2. System checks ethical considerations
@@ -21,6 +21,6 @@ Example Flow
 5. Outputs results to report.md
 
 Configuration
-------------
+-------------
 
 Ensure your YAML configuration files are properly set up in the crew config directories.

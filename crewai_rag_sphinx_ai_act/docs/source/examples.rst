@@ -7,10 +7,10 @@ This section provides practical examples of how to use the QA AI Agent system.
    :maxdepth: 2
 
 Basic Usage Examples
--------------------
+--------------------
 
 Simple Question Answering
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -24,7 +24,7 @@ Simple Question Answering
    print(response)
 
 RAG-based Question Answering
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -41,7 +41,7 @@ RAG-based Question Answering
    print(response)
 
 Web Search Integration
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -58,10 +58,10 @@ Web Search Integration
    print(response)
 
 Advanced Examples
-----------------
+-----------------
 
 Custom Tool Integration
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
