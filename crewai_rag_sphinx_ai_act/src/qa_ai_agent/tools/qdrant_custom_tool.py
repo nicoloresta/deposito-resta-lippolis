@@ -1,33 +1,33 @@
 """
-Custom tools for the QA AI Agent system.
+    Custom tools for the QA AI Agent system.
 
-This module provides specialized tools for document processing, retrieval,
-and RAG (Retrieval-Augmented Generation) operations. It includes document
-loading, chunking, and a custom RAG tool that integrates with CrewAI.
+    This module provides specialized tools for document processing, retrieval,
+    and RAG (Retrieval-Augmented Generation) operations. It includes document
+    loading, chunking, and a custom RAG tool that integrates with CrewAI.
 
-Classes
--------
-RetrieverSettings
-    Configuration settings for document retrieval behavior.
-ChunkingSettings
-    Configuration settings for document chunking.
-RagToolInput
-    Input schema for the RAG tool.
-RagTool
-    Custom RAG tool for CrewAI integration.
+    Classes
+    -------
+    RetrieverSettings
+        Configuration settings for document retrieval behavior.
+    ChunkingSettings
+        Configuration settings for document chunking.
+    RagToolInput
+        Input schema for the RAG tool.
+    RagTool
+        Custom RAG tool for CrewAI integration.
 
-Functions
----------
-load_docs
-    Load documents from a directory with support for multiple file types.
-chunk_docs
-    Split documents into smaller chunks for processing.
+    Functions
+    ---------
+    load_docs
+        Load documents from a directory with support for multiple file types.
+    chunk_docs
+        Split documents into smaller chunks for processing.
 
-Examples
---------
->>> from .tools.custom_tool import RagTool, RetrieverSettings
->>> tool = RagTool(retriever_settings=RetrieverSettings(k=5))
->>> result = tool._run("What is the battery capacity of the Galaxy S22?")
+    Examples
+    --------
+    >>> from .tools.custom_tool import RagTool, RetrieverSettings
+    >>> tool = RagTool(retriever_settings=RetrieverSettings(k=5))
+    >>> result = tool._run("What is the battery capacity of the Galaxy S22?")
 """
 
 import os
@@ -62,26 +62,26 @@ class QdrantSettings:
 @dataclass
 class ChunkingSettings:
     """
-    Chunking configuration for splitting documents.
+        Chunking configuration for splitting documents.
 
-    This dataclass defines how documents should be split into smaller chunks
-    for processing. The chunking process is crucial for effective retrieval
-    and embedding generation.
+        This dataclass defines how documents should be split into smaller chunks
+        for processing. The chunking process is crucial for effective retrieval
+        and embedding generation.
 
-    Parameters
-    ----------
-    chunk_size : int, default=1000
-        Target character length for each chunk. Larger chunks provide more
-        context but may be less focused.
-    chunk_overlap : int, default=200
-        Number of overlapping characters between adjacent chunks. Overlap
-        helps maintain context continuity across chunk boundaries.
+        Parameters
+        ----------
+        chunk_size : int, default=1000
+            Target character length for each chunk. Larger chunks provide more
+            context but may be less focused.
+        chunk_overlap : int, default=200
+            Number of overlapping characters between adjacent chunks. Overlap
+            helps maintain context continuity across chunk boundaries.
 
-    Examples
-    --------
-    >>> settings = ChunkingSettings(chunk_size=1500, chunk_overlap=300)
-    >>> settings.chunk_size
-    1500
+        Examples
+        --------
+        >>> settings = ChunkingSettings(chunk_size=1500, chunk_overlap=300)
+        >>> settings.chunk_size
+        1500
     """
 
     chunk_size: int = 1000
@@ -231,38 +231,38 @@ def load_docs(
     path: Path, file_types: List[str] = [".txt", ".md", ".pdf", ".csv"]
 ) -> List[Document]:
     """
-    Load documents from a directory.
+        Load documents from a directory.
 
-    Supports ``.txt``, ``.md``, ``.pdf``, and ``.csv`` files using langchain
-    loaders. Each file type is loaded with a suitable loader and aggregated
-    into a single list of ``Document`` objects.
+        Supports ``.txt``, ``.md``, ``.pdf``, and ``.csv`` files using langchain
+        loaders. Each file type is loaded with a suitable loader and aggregated
+        into a single list of ``Document`` objects.
 
-    Parameters
-    ----------
-    path : pathlib.Path
-        Directory containing the files to load. Must exist and be accessible.
-    file_types : list of str, optional
-        File extensions to include. Defaults to ``[".txt", ".md", ".pdf", ".csv"]``.
-        Unsupported file types are skipped with a warning message.
+        Parameters
+        ----------
+        path : pathlib.Path
+            Directory containing the files to load. Must exist and be accessible.
+        file_types : list of str, optional
+            File extensions to include. Defaults to ``[".txt", ".md", ".pdf", ".csv"]``.
+            Unsupported file types are skipped with a warning message.
 
-    Returns
-    -------
-    list of langchain.schema.Document
-        Loaded documents with metadata preserved from the original files.
+        Returns
+        -------
+        list of langchain.schema.Document
+            Loaded documents with metadata preserved from the original files.
 
-    Raises
-    ------
-    ValueError
-        If ``path`` does not exist or is not accessible.
+        Raises
+        ------
+        ValueError
+            If ``path`` does not exist or is not accessible.
 
-    Examples
-    --------
-    >>> from pathlib import Path
-    >>> docs = load_docs(Path("./documents"), [".txt", ".pdf"])
-    >>> len(docs)
-    15
-    >>> docs[0].metadata
-    {'source': './documents/sample.txt'}
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> docs = load_docs(Path("./documents"), [".txt", ".pdf"])
+        >>> len(docs)
+        15
+        >>> docs[0].metadata
+        {'source': './documents/sample.txt'}
     """
     if not path.exists():
         raise ValueError("Invalid path provided")
@@ -302,37 +302,37 @@ def load_docs(
 
 def chunk_docs(docs: List[Document], settings: ChunkingSettings):
     """
-    Split documents into smaller chunks.
+        Split documents into smaller chunks.
 
-    Uses ``RecursiveCharacterTextSplitter`` with the provided settings to
-    generate overlapping chunks suitable for embedding and retrieval.
-    The splitter attempts to break on natural boundaries like paragraphs,
-    sentences, and punctuation.
+        Uses ``RecursiveCharacterTextSplitter`` with the provided settings to
+        generate overlapping chunks suitable for embedding and retrieval.
+        The splitter attempts to break on natural boundaries like paragraphs,
+        sentences, and punctuation.
 
-    Parameters
-    ----------
-    docs : list of langchain.schema.Document
-        Documents to split. Each document should have a ``page_content``
-        attribute containing the text to be chunked.
-    settings : ChunkingSettings
-        Chunking configuration specifying chunk size and overlap.
+        Parameters
+        ----------
+        docs : list of langchain.schema.Document
+            Documents to split. Each document should have a ``page_content``
+            attribute containing the text to be chunked.
+        settings : ChunkingSettings
+            Chunking configuration specifying chunk size and overlap.
 
-    Returns
-    -------
-    list of langchain.schema.Document
-        Chunked documents with preserved metadata. Each chunk maintains
-        the original document's metadata while containing a subset of
-        the content.
+        Returns
+        -------
+        list of langchain.schema.Document
+            Chunked documents with preserved metadata. Each chunk maintains
+            the original document's metadata while containing a subset of
+            the content.
 
-    Examples
-    --------
-    >>> from .tools.custom_tool import ChunkingSettings
-    >>> settings = ChunkingSettings(chunk_size=500, chunk_overlap=100)
-    >>> chunks = chunk_docs(documents, settings)
-    >>> len(chunks)
-    25
-    >>> chunks[0].page_content
-    'First chunk content...'
+        Examples
+        --------
+        >>> from .tools.custom_tool import ChunkingSettings
+        >>> settings = ChunkingSettings(chunk_size=500, chunk_overlap=100)
+        >>> chunks = chunk_docs(documents, settings)
+        >>> len(chunks)
+        25
+        >>> chunks[0].page_content
+        'First chunk content...'
     """
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.chunk_size,
@@ -392,22 +392,22 @@ class HFEmbeddings(EmbeddingModel):
 
 class RagToolInput(BaseModel):
     """
-    Input schema for ``RagTool``.
+        Input schema for ``RagTool``.
 
-    This Pydantic model defines the expected input format for the RAG tool,
-    ensuring that queries are properly validated before processing.
+        This Pydantic model defines the expected input format for the RAG tool,
+        ensuring that queries are properly validated before processing.
 
-    Parameters
-    ----------
-    query : str
-        Query for retrieving the most relevant documents. Should be a
-        natural language question or search term.
+        Parameters
+        ----------
+        query : str
+            Query for retrieving the most relevant documents. Should be a
+            natural language question or search term.
 
-    Examples
-    --------
-    >>> input_data = RagToolInput(query="What is the battery capacity?")
-    >>> input_data.query
-    'What is the battery capacity?'
+        Examples
+        --------
+        >>> input_data = RagToolInput(query="What is the battery capacity?")
+        >>> input_data.query
+        'What is the battery capacity?'
     """
 
     query: str = Field(..., description="Query for retrieving most relevant documents")
@@ -418,36 +418,36 @@ class RagToolInput(BaseModel):
 
 class RagTool(BaseTool):
     """
-    Retrieval-Augmented Generation (RAG) tool.
+        Retrieval-Augmented Generation (RAG) tool.
 
-    The tool retrieves relevant document chunks from a FAISS index and can be
-    used within CrewAI workflows to augment generation with external context.
-    It automatically handles document loading, chunking, and indexing if no
-    existing index is found.
+        The tool retrieves relevant document chunks from a FAISS index and can be
+        used within CrewAI workflows to augment generation with external context.
+        It automatically handles document loading, chunking, and indexing if no
+        existing index is found.
 
-    The tool supports both similarity search and Maximal Marginal Relevance (MMR)
-    retrieval strategies, allowing for customization of result relevance vs.
-    diversity trade-offs.
+        The tool supports both similarity search and Maximal Marginal Relevance (MMR)
+        retrieval strategies, allowing for customization of result relevance vs.
+        diversity trade-offs.
 
-    Attributes
-    ----------
-    name : str
-        Tool identifier used by CrewAI.
-    description : str
-        Human-readable description of the tool's functionality.
-    args_schema : Type[BaseModel]
-        Input validation schema (RagToolInput).
-    _retriever : Any
-        Private attribute storing the configured FAISS retriever.
+        Attributes
+        ----------
+        name : str
+            Tool identifier used by CrewAI.
+        description : str
+            Human-readable description of the tool's functionality.
+        args_schema : Type[BaseModel]
+            Input validation schema (RagToolInput).
+        _retriever : Any
+            Private attribute storing the configured FAISS retriever.
 
-    Examples
-    --------
-    >>> tool = RagTool(
-    ...     rag_path=Path("./my_rag_index"),
-    ...     docs_path=Path("./my_documents"),
-    ...     retriever_settings=RetrieverSettings(k=5)
-    ... )
-    >>> result = tool._run("What features does the device have?")
+        Examples
+        --------
+        >>> tool = RagTool(
+        ...     rag_path=Path("./my_rag_index"),
+        ...     docs_path=Path("./my_documents"),
+        ...     retriever_settings=RetrieverSettings(k=5)
+        ... )
+        >>> result = tool._run("What features does the device have?")
     """
 
     name: str = "Rag Tool"
@@ -989,49 +989,49 @@ class RagTool(BaseTool):
         chunk_settings: ChunkingSettings = ChunkingSettings(),
     ):
         """
-        Initialize the RAG tool.
+            Initialize the RAG tool.
 
-        Builds or loads a FAISS vector store from ``rag_path``. If a previously
-        saved index exists in ``rag_path``, it is loaded and a retriever is
-        configured. Otherwise, documents are loaded, chunked, and a new vector
-        store is created and saved.
+            Builds or loads a FAISS vector store from ``rag_path``. If a previously
+            saved index exists in ``rag_path``, it is loaded and a retriever is
+            configured. Otherwise, documents are loaded, chunked, and a new vector
+            store is created and saved.
 
-        Parameters
-        ----------
-        embedding_model : Any, optional
-            LangChain embedding model instance. If None, creates an Azure OpenAI
-            embeddings model using environment variables.
-        rag_path : pathlib.Path, default=Path("./rsc/rag")
-            Directory containing source documents or an existing FAISS index.
-            If the directory doesn't exist, it will be created.
-        docs_path : pathlib.Path, default=Path("./rsc/docs")
-            Directory containing source documents for indexing. Only used when
-            creating a new index.
-        retriever_settings : RetrieverSettings, optional
-            Retrieval configuration used when creating the retriever.
-            Defaults to RetrieverSettings().
-        chunk_settings : ChunkingSettings, optional
-            Chunking configuration for splitting documents before indexing.
-            Defaults to ChunkingSettings().
+            Parameters
+            ----------
+            embedding_model : Any, optional
+                LangChain embedding model instance. If None, creates an Azure OpenAI
+                embeddings model using environment variables.
+            rag_path : pathlib.Path, default=Path("./rsc/rag")
+                Directory containing source documents or an existing FAISS index.
+                If the directory doesn't exist, it will be created.
+            docs_path : pathlib.Path, default=Path("./rsc/docs")
+                Directory containing source documents for indexing. Only used when
+                creating a new index.
+            retriever_settings : RetrieverSettings, optional
+                Retrieval configuration used when creating the retriever.
+                Defaults to RetrieverSettings().
+            chunk_settings : ChunkingSettings, optional
+                Chunking configuration for splitting documents before indexing.
+                Defaults to ChunkingSettings().
 
-        Notes
-        -----
-        The tool automatically detects existing FAISS indices (``index.faiss``
-        and ``index.pkl`` files) and loads them if available. Otherwise, it
-        processes documents from ``docs_path`` to create a new index.
+            Notes
+            -----
+            The tool automatically detects existing FAISS indices (``index.faiss``
+            and ``index.pkl`` files) and loads them if available. Otherwise, it
+            processes documents from ``docs_path`` to create a new index.
 
-        Environment variables required for Azure OpenAI embeddings:
-        - EMBEDDING_MODEL: Model name
-        - AZURE_API_BASE: API endpoint
-        - AZURE_API_KEY: API key
-        - AZURE_API_VERSION: API version
+            Environment variables required for Azure OpenAI embeddings:
+            - EMBEDDING_MODEL: Model name
+            - AZURE_API_BASE: API endpoint
+            - AZURE_API_KEY: API key
+            - AZURE_API_VERSION: API version
 
-        Examples
-        --------
-        >>> tool = RagTool(
-        ...     rag_path=Path("./custom_rag"),
-        ...     retriever_settings=RetrieverSettings(search_type="mmr", k=3)
-        ... )
+            Examples
+            --------
+            >>> tool = RagTool(
+            ...     rag_path=Path("./custom_rag"),
+            ...     retriever_settings=RetrieverSettings(search_type="mmr", k=3)
+            ... )
         """
         # Call parent constructor first
         super().__init__()
